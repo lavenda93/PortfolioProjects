@@ -1,27 +1,5 @@
-/****** Script for SelectTopNRows command from SSMS  ******/
-SELECT TOP (1000) [UniqueID]
-      ,[ParcelID]
-      ,[LandUse]
-      ,[PropertyAddress]
-      ,[SaleDate]
-      ,[SalePrice]
-      ,[LegalReference]
-      ,[SoldAsVacant]
-      ,[OwnerName]
-      ,[OwnerAddress]
-      ,[Acreage]
-      ,[TaxDistrict]
-      ,[LandValue]
-      ,[BuildingValue]
-      ,[TotalValue]
-      ,[YearBuilt]
-      ,[Bedrooms]
-      ,[FullBath]
-      ,[HalfBath]
-  FROM [NashvilleHousing].[dbo].[Nashville Housing Data for Data Cleaning]
 
-
-  --Cleaning Data in SQL Queries
+  --Cleaning Data in SQL
   */
 
 
@@ -30,14 +8,14 @@ SELECT TOP (1000) [UniqueID]
 
 -------------------------------------------------------------------------
 
--- Standardize date Format
+-- Let's standardize the date Format
 
 Select SaleDate, CONVERT(date, SaleDate)
   From [Nashville Housing Data for Data Cleaning]
 
 ------------------------------------------------------------------------
 
---Populate Property Address data
+--Populating  Property Address data
 
 Select *
   From [Nashville Housing Data for Data Cleaning]
@@ -136,8 +114,7 @@ From [Nashville Housing Data for Data Cleaning]
 Group by SoldAsVacant
 order by 2
 
-
---(SoldAsVacant Column was in 'bit'data type, so I changed it to varchar first
+--(SoldAsVacant Column was in 'bit'data type, so I converted it to varchar first
 
 ALTER TABLE [Nashville Housing Data for Data Cleaning]
 ALTER  COLUMN SoldAsVacant varchar(255)
