@@ -1,1 +1,223 @@
+#loading the necessary libaries
+library(tidyverse)
+library(dplyr)
+library(zoo)
+library(ggplot2)
+library(lubridate)
 
+#load the datasets
+apple <- read_csv('data/AAPL.csv', show_col_types = FALSE)
+amzn <- read_csv('data/AMZN.csv', show_col_types = FALSE)
+baba <- read_csv('data/BABA.csv', show_col_types = FALSE)
+crm <- read_csv('data/CRM.csv', show_col_types = FALSE)
+fb <- read_csv('data/FB.csv', show_col_types = FALSE)
+goog <- read_csv('data/GOOG.csv', show_col_types = FALSE)
+intc <- read_csv('data/INTC.csv', show_col_types = FALSE)
+msft <- read_csv('data/MSFT.csv', show_col_types = FALSE)
+nvda <- read_csv('data/NVDA.csv', show_col_types = FALSE)
+tsla <- read_csv('data/TSLA.csv', show_col_types = FALSE)
+
+
+#creating a datafram for each dataset and including a new column "Company" that contains for each observation, the name of the stock
+df1 <- apple %>%
+ data.frame()
+ 
+df1 <- df1 %>%
+mutate(Company = rep("aapl", times = 2999))
+
+df2 <- amzn %>%
+ data.frame()
+
+df2 <- df2 %>%
+mutate(Company = rep("amzn", times = 2999)) 
+
+df3 <- baba %>%
+ data.frame()
+
+df3 <- df3 %>%
+mutate(Company = rep("baba", times = 1812))
+
+df4 <- crm %>%
+ data.frame()
+
+df4 <- df4 %>%
+mutate(Company = rep("crm", times = 2999))
+
+df5 <- fb %>%
+ data.frame()
+
+df5 <- df5 %>%
+mutate(Company = rep("fb", times = 2399))
+
+df6 <- goog %>%
+ data.frame()
+
+df6 <- df6 %>%
+mutate(Company = rep("goog", times = 2999))
+
+df7 <- intc %>%
+ data.frame()
+
+df7 <- df7 %>%
+mutate(Company = rep("intc", times = 2998))
+
+df8 <- msft %>%
+ data.frame()
+
+df8 <- df8 %>%
+mutate(Company = rep("msft", times = 2999))
+
+df9 <- nvda %>%
+ data.frame()
+
+df9 <- df9 %>%
+mutate(Company = rep("nvda", times = 2999))
+
+df10 <- tsla %>%
+ data.frame()
+
+df10 <- df10 %>%
+mutate(Company = rep("tsla", times = 2876))
+
+#Merge into one
+merged_df <- rbind(df1, df2, df3, df4, df5, df6, df7, df8, df9, df10)
+
+#Extracting and formatting only the month and year
+merged_df <- merged_df %>%
+  mutate(YYMM = ymd(Date))
+
+merged_df <- merged_df %>%
+  mutate(YYMM = format(YYMM, "%Y-%m"))
+
+#1.Exploring the highest and lowest closing prices
+
+highest_close_price <- merged_df1 %>%
+  group_by(Company) %>%
+  summarize(Max_of_Close = max(Close)) %>%
+ arrange(desc(Max_of_Close))
+View(highest_close_price)
+
+#Visualizing the highest close price for each stock
+
+ggplot(highest_close_price, aes(x = Company, y = Max_of_Close, fill = Company)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(Max_of_Close), vjust = -0.5)) +
+  labs(title = "Highest Close Prices", x = "Company", y = "Max_Close") +
+ theme(
+    panel.grid = element_blank()  # Remove gridlines
+  )
+
+#Companies with the lowest closing prices
+
+lowest_close_price <- merged_df1 %>%
+  group_by(Company) %>%
+  summarize(Min_of_Close = min(Close)) %>%
+ arrange(Min_of_Close)
+View(lowest_close_price)
+
+#Visualizing the lowest close price for each stock
+
+ggplot(lowest_close_price, aes(x = Company, y = Min_of_Close, fill = Company)) +
+ geom_bar(stat = "identity") +
+ geom_text(aes(label = round(Min_of_Close), vjust = -0.5)) +
+  labs(title = "Lowest Close Prices", x = "Company", y = "Min_Close") +
+ theme(
+    panel.grid = element_blank() 
+  )
+
+
+#2.exploring the dates of All-time-high and All-time-low for each stock 
+
+Date_of_ATH <- merged_df %>%
+select(Company, High, Date) %>%
+  group_by(Company) %>%
+filter(High == max(High))
+View(Date_of_ATH)
+
+Date_of_ATL <- merged_df %>%
+select(Company, Low, Date) %>%
+  group_by(Company) %>%
+filter(Low == min(Low))
+View(Date_of_ATL)
+
+
+
+#3. exploring trading volume overtime for stock (percentage change)
+ #looking at amazon's percentage volume change
+
+amzn_percentage_change <- merged_df %>%
+select(Company, Volume, Date, YYMM) %>%
+group_by(Company, YYMM) %>%
+mutate(Percentage_change = (Volume - lag(Volume)) / lag(Volume) * 100) %>%
+filter(Company == "amzn")
+View(amzn_percentage_change)
+
+#average monthly percentage change in volume for amazon stock
+Yearsum <- amzn_percentage_change %>%
+group_by(YYMM) %>%
+filter(!is.na(Percentage_change)) %>%
+summarise(Avg_percentage = mean(Percentage_change))
+View(Yearsum)
+
+#explore trading volume overtime for all stocks
+company_colors <- c("aaple" = "#1f77b4", "amzn" = "#ff7f0e", "baba" = "#2ca02c", "crm" = "#d62728", "fb" = "#9467bd", "goog" = "#8c564b", "intc" = "#e377c2", "msft" = "#7f7f7f", "nvda" = "#bcbd22", "tsla" = "#17becf")
+
+ggplot(merged_df, aes(x = Date, y = Volume, color = Company)) +
+geom_point(aes(alpha = Volume), size = 0.5) +
+scale_fill_manual(values = company_colors) +
+labs(title = "Trading volume for each Stock over time") +
+theme(plot.title = element_text(hjust = 0.5)) +
+facet_wrap( ~ Company) +
+guides(alpha = "none")
+
+
+#4. exploring closing price at EOM for each stock
+ #looking at closing price for fb at the end of the month
+
+fb_eom_close <- merged_df %>%
+select(Company, Date, Close) %>%
+group_by(Company, Date) %>%
+filter(Company == "fb" & Date == ceiling_date(Date, "month") - days(1))
+View(fb_eom_close)
+
+ggplot(fb_eom_close, aes(x = Date, y = Close, color = Date)) +
+geom_point() +
+labs(title = "End-of-Month Close Price for FB stock") +
+theme(plot.title = element_text(hjust = 0.5)) 
+
+#exploring closing price at EOM for each stock
+eom_close <- merged_df %>%
+select(Company, Date, Close) %>%
+group_by(Company, Date) %>%
+filter(Date == ceiling_date(Date, "month") - days(1))
+#View(eom_close)
+
+ggplot(eom_close, aes(x = Date, y = Close, color = Company)) +
+geom_line() +
+labs(title = "End-of-Month Close Price") +
+theme(plot.title = element_text(hjust = 0.5))
+
+
+#5. 3month and 6months, percentage change in highs
+#Looking at salesforce 3month percentage change in high
+
+high_change <- merged_df %>%
+  select(Company, YYMM, High) %>%
+  group_by(Company, YYMM) %>%
+  mutate(Percentage_highChange = (High - lag(High)) / lag(High) * 100) %>%
+  filter(Company == "crm")
+
+#average monthly percentage change in volume for salesforce stock
+Yearsum2 <- high_change %>%
+  group_by(YYMM) %>%
+  filter(!is.na(Percentage_highChange)) %>%
+  summarise(Avg_monthlyChange = mean(Percentage_highChange))
+#View(Yearsum2)
+
+#this calculates the percentage change of the high price on a three-month rolling period
+Yearsum2i <- Yearsum2 %>%
+  mutate(threemonthchange = rollmean(Avg_monthlyChange, 3, fill = NA, align = "right")) %>%
+  group_by(YYMM)
+View(Yearsum2i)
+
+#For 6month, 9month, etc, replace '3' with the corresponding number of months you want to calculate for.
